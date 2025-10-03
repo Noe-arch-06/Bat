@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Batman Runner</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            font-family: Arial, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Pantalla de inicio */
+        #start-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(#000, #222);
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #start-screen h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            z-index: 2;
+            position: relative;
+        }
+
+        #start-screen p {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            z-index: 2;
+            position: relative;
+        }
+
+        #start-screen button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: purple;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 2;
+            position: relative;
+        }
+
+        #start-screen button:hover {
+            background: violet;
+        }
+
+        #start-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: url('Batmancito.png') repeat-x;
+            background-size: contain;
+            opacity: 0.2;
+            z-index: 1;
+        }
+
+        /* Juego */
+        .game {
+            position: relative;
+            width: 100vw;
+            height: 400px;
+            background: url("fondo.png") repeat-x;
+            background-size: cover;
+            border-bottom: 3px solid #444;
+            overflow: hidden;
+            display: none;
+            top: 120px;
+        }
+
+        #batman {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 70px;
+        }
+
+        .obstaculo {
+            position: absolute;
+            bottom: 20px;
+            width: 60px;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 1.2rem;
+        }
+
+        #hint {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: yellow;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            color: rgb(250, 5, 5);
+            display: none;
+            text-align: center;
+        }
+
+        /* Botón volver a jugar fijo */
+        #restart-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            background: purple;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            transition: 0.3s;
+        }
+
+        #restart-btn:hover {
+            background: violet;
+            transform: scale(1.1);
+        }
+
+        /* Letras flotantes */
+        .letter {
+            position: absolute;
+            font-size: 20px;
+            color: #d3d1c9;
+            font-weight: bold;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .small-image {
+            position: absolute;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Notita especial */
+        #special-note {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 80%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #111;
+            border-radius: 15px;
+            font-size: 1rem;
+            line-height: 1.4;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-y: auto;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Pantalla de inicio -->
+    <div id="start-screen">
+        <div id="start-background"></div>
+        <h1>Distráete</h1>
+        <p>Dedicado para Alejandro - 03/10/2025</p>
+        <button onclick="startGame()">Continuar</button>
+    </div>
+
+    <!-- Juego -->
+    <div class="game" id="game">
+        <img src="batman-removebg-preview.png" id="batman" alt="Batman" style="width:100px; height: 100px">
+        <div id="score">Puntos: 0</div>
+        <div id="hint">👉 Al llegar a 300 tienes una sorpresa</div>
+        <div id="game-over">
+            💥 Te chocasteee💥 <br><br>
+            <button id="restart-btn">Volver a jugar</button>
+        </div>
+
+        <!-- Notita especial -->
+        <div id="special-note">
+            Como Batman entre las sombras, cada día enfrentamos retos que parecen imposibles.<br><br>
+            Pero incluso en la noche más oscura, la luz de quien eres brilla con fuerza.<br><br>
+            No dejes de sonreír con esa sonrisa que pocas veces das y con esos dientes que pareces Drácula, jajaja.<br><br>
+            Sigue tu camino, protege tu esencia, y recuerda que tus acciones, aunque silenciosas, dejan huella en el mundo.<br><br>
+            Hoy hice esto para ti, esperando que te saque una sonrisa y recuerdes que alguien cree en ti.
+        </div>
+    </div>
+
+    <script>
+        const startScreen = document.getElementById("start-screen");
+        const startBg = document.getElementById("start-background");
+        const game = document.getElementById("game");
+        const batman = document.getElementById("batman");
+        const scoreElement = document.getElementById("score");
+        const gameOver = document.getElementById("game-over");
+        const specialNote = document.getElementById("special-note");
+        const restartBtn = document.getElementById("restart-btn");
+
+        let score = 0;
+        let gameActive = false;
+        let batmanX = 20;
+        let batmanY = 20;
+        let batmanVelocity = 0;
+        const gravity = 2;
+        const jumpStrength = 20;
+        let scoreInterval;
+        let bgX = 0;
+
+        restartBtn.onclick = restartGame;
+
+        // Fondo animado en inicio
+        function animateStartBackground() {
+            bgX -= 0.5;
+            startBg.style.backgroundPositionX = bgX + "px";
+            requestAnimationFrame(animateStartBackground);
+        }
+        animateStartBackground();
+
+        function startGame() {
+            startScreen.style.display = "none";
+            game.style.display = "block";
+            resetGame();
+        }
+
+        function resetGame() {
+            score = 0;
+            gameActive = true;
+            batmanX = 20;
+            batmanY = 20;
+            batmanVelocity = 0;
+            batman.style.left = batmanX + "px";
+            batman.style.bottom = batmanY + "px";
+            scoreElement.textContent = "Puntos: " + score;
+            gameOver.style.display = "none";
+            specialNote.style.display = "none";
+
+            document.querySelectorAll(".obstaculo, .letter, .small-image").forEach(e => e.remove());
+
+            scoreInterval = setInterval(updateScore, 200);
+            setTimeout(createObstacle, 2000);
+
+            requestAnimationFrame(updateGame);
+        }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            // Movimiento vertical
+            batmanVelocity -= gravity;
+            batmanY += batmanVelocity;
+            if (batmanY < 20) { batmanY = 20; batmanVelocity = 0; }
+            if (batmanY > 300) batmanY = 300;
+            batman.style.bottom = batmanY + "px";
+
+            // Movimiento horizontal lento hacia el centro
+            const targetX = window.innerWidth / 2 - batman.offsetWidth / 2;
+            if (batmanX < targetX) batmanX += 1; // velocidad horizontal
+            batman.style.left = batmanX + "px";
+
+            // Fondo
+            let currentX = parseInt(getComputedStyle(game).backgroundPositionX) || 0;
+            game.style.backgroundPositionX = (currentX - 2) + "px";
+
+            requestAnimationFrame(updateGame);
+        }
+
+        function jump() {
+            if (!gameActive) return;
+            batmanVelocity += jumpStrength;
+        }
+        document.addEventListener("keydown", jump);
+        document.addEventListener("click", jump);
+
+        function createObstacle() {
+            if (!gameActive) return;
+            const obstaculo = document.createElement("img");
+            obstaculo.src = "Murc.png";
+            obstaculo.style.width = "100px";
+            obstaculo.style.height = "90px";
+            obstaculo.classList.add("obstaculo");
+            obstaculo.style.left = window.innerWidth + "px";
+            game.appendChild(obstaculo);
+
+            const move = setInterval(() => {
+                if (!gameActive) { clearInterval(move); obstaculo.remove(); return; }
+
+                let obstaculoX = parseInt(obstaculo.style.left);
+                obstaculo.style.left = (obstaculoX - 5) + "px";
+
+                const batmanTop = batmanY + batman.offsetHeight;
+                const obstaculoBottom = parseInt(window.getComputedStyle(obstaculo).getPropertyValue("bottom"));
+                const obstaculoTop = obstaculoBottom + obstaculo.offsetHeight;
+
+                const collX = batmanX + batman.offsetWidth > obstaculoX &&
+                    batmanX < obstaculoX + obstaculo.offsetWidth;
+                const collY = batmanTop > obstaculoBottom && batmanY < obstaculoTop;
+
+                if (collX && collY) { endGame(); clearInterval(move); }
+
+                if (obstaculoX < -60) { clearInterval(move); obstaculo.remove(); score += 10; }
+            }, 30);
+
+            setTimeout(createObstacle, Math.random() * 3000 + 2000);
+        }
+
+        function updateScore() {
+            if (gameActive) {
+                score++;
+                scoreElement.textContent = "Puntos: " + score;
+
+                if (score >= 300) {
+                    showVictoryNote();
+                    endGame();
+                }
+            }
+        }
+
+        function showVictoryNote() {
+            specialNote.style.display = "block";
+
+            // Letras y mini imágenes flotando
+            const letters1 = "ALEJANDROELMEJOR";
+            for (let i = 0; i < 80; i++) {
+                const letter = document.createElement("span");
+                letter.classList.add("letter");
+                letter.textContent = letters1[Math.floor(Math.random() * letters1.length)];
+                letter.style.left = Math.random() * window.innerWidth + "px";
+                letter.style.top = Math.random() * window.innerHeight + "px";
+                letter.style.fontSize = 10 + Math.random() * 30 + "px";
+                letter.style.opacity = Math.random();
+                game.appendChild(letter);
+                animateLetter(letter);
+            }
+
+            for (let i = 0; i < 40; i++) {
+                const img = document.createElement("img");
+                img.src = "Batmancito.png";
+                img.classList.add("small-image");
+                img.style.width = "50px";
+                img.style.height = "60px";
+                img.style.left = Math.random() * window.innerWidth + "px";
+                img.style.top = Math.random() * window.innerHeight + "px";
+                game.appendChild(img);
+                animateSmallImage(img);
+            }
+        }
+
+        function animateLetter(el) {
+            const dx = (Math.random() - 0.5) * 2;
+            const dy = (Math.random() - 0.5) * 2;
+            const rotate = Math.random() * 360;
+            function move() {
+                if (!el.parentElement) return;
+                el.style.left = parseFloat(el.style.left) + dx + "px";
+                el.style.top = parseFloat(el.style.top) + dy + "px";
+                el.style.transform = `rotate(${rotate}deg)`;
+                requestAnimationFrame(move);
+            }
+            move();
+        }
+
+        function animateSmallImage(el) {
+            const dx = (Math.random() - 0.5) * 3;
+            const dy = (Math.random() - 0.5) * 3;
+            function move() {
+                if (!el.parentElement) return;
+                el.style.left = parseFloat(el.style.left) + dx + "px";
+                el.style.top = parseFloat(el.style.top) + dy + "px";
+                requestAnimationFrame(move);
+            }
+            move();
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(scoreInterval);
+            document.querySelectorAll(".obstaculo").forEach(o => o.remove());
+            if (score < 300) gameOver.style.display = "block";
+        }
+
+        function restartGame() {
+            resetGame();
+        }
+    </script>
+</body>
+
+</html>
